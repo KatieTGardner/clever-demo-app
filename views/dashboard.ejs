@@ -348,7 +348,9 @@
             <div class="class-header">
               <div>
                 <div class="class-name"><%= cls.name || 'Untitled Section' %></div>
-                <% if (cls.schoolId) { %>
+                <% if (cls.schoolName) { %>
+                  <div class="school-tag"><%= cls.schoolName %></div>
+                <% } else if (cls.schoolId) { %>
                   <div class="school-tag">School ID: <%= cls.schoolId %></div>
                 <% } %>
               </div>

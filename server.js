@@ -262,6 +262,7 @@ app.get('/dashboard', (req, res) => {
     }));
 
   } else if (activeRole === 'school_admin') {
+    
     // ----- SCHOOL ADMIN VIEW: all sections in their schools -----
     const schoolIds = new Set(userSchools.map(s => s.cleverId));
     console.log('🏫 School admin schools:', [...schoolIds]);
@@ -278,6 +279,7 @@ app.get('/dashboard', (req, res) => {
       id: sec.sectionId,
       name: sec.sectionName || 'Untitled Section',
       schoolId: sec.schoolId,
+      schoolName: schoolById[sec.schoolId] || null,
       students: studentsForSectionStmt.all(sec.sectionId),
       teachers: teachersForSectionStmt.all(sec.sectionId)
     }));
@@ -296,6 +298,7 @@ app.get('/dashboard', (req, res) => {
       id: sec.sectionId,
       name: sec.sectionName || 'Untitled Section',
       schoolId: sec.schoolId,
+      schoolName: schoolById[sec.schoolId] || null,
       students: studentsForSectionStmt.all(sec.sectionId),
       teachers: teachersForSectionStmt.all(sec.sectionId)
     }));
@@ -317,6 +320,7 @@ app.get('/dashboard', (req, res) => {
       id: sec.sectionId,
       name: sec.sectionName || 'Untitled Section',
       schoolId: sec.schoolId,
+      schoolName: schoolById[sec.schoolId] || null,
       teachers: teachersForSectionStmt.all(sec.sectionId)
     }));
   }
