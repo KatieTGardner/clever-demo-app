@@ -1,0 +1,415 @@
+<style>
+  body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f5f7fb;
+    margin: 0;
+    padding: 20px;
+    color: #1f2933;
+  }
+
+  .admin-container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .page-title {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .page-title h1 {
+    margin: 0;
+  }
+
+  .page-subtitle {
+    margin: 0 0 24px 0;
+    color: #6b7280;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .card {
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 16px 18px;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+  }
+
+  .card h3 {
+    margin-top: 0;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .card p {
+    margin-top: 0;
+    color: #6b7280;
+    font-size: 0.92rem;
+  }
+
+  .card small {
+    color: #9ca3af;
+    font-size: 0.8rem;
+  }
+
+  .btn {
+    border: none;
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-primary {
+    background: #FDB913;
+    color: #1f2933;
+  }
+
+  .btn-secondary {
+    background: #2F6C95;
+    color: #ffffff;
+  }
+
+  .btn:hover {
+    filter: brightness(0.96);
+  }
+
+  .upload-input {
+    font-size: 0.9rem;
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .stat-pill {
+    background: #ffffff;
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-size: 0.82rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+  }
+
+  .stat-pill span.label {
+    color: #6b7280;
+  }
+
+  .stat-pill span.value {
+    font-weight: 700;
+    color: #111827;
+  }
+
+  .user-table-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 16px 18px 8px 18px;
+    box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+  }
+
+  .user-table-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .user-table-header h3 {
+    margin: 0;
+  }
+
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .filters input,
+  .filters select {
+    border-radius: 999px;
+    border: 1px solid #d1d5db;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    outline: none;
+  }
+
+  .filters input:focus,
+  .filters select:focus {
+    border-color: #2F6C95;
+    box-shadow: 0 0 0 1px rgba(47, 108, 149, 0.25);
+  }
+
+  .user-table-wrapper {
+    max-height: 450px;
+    overflow: auto;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+  }
+
+  table.user-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+  }
+
+  table.user-table thead {
+    position: sticky;
+    top: 0;
+    background: #f3f4f6;
+    z-index: 1;
+  }
+
+  table.user-table th,
+  table.user-table td {
+    padding: 8px 10px;
+    text-align: left;
+  }
+
+  table.user-table th {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #6b7280;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  table.user-table tbody tr:nth-child(even) {
+    background: #f9fafb;
+  }
+
+  table.user-table tbody tr.hidden {
+    display: none;
+  }
+
+  .role-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .role-student { background: #DBEAFE; color: #1D4ED8; }
+  .role-teacher { background: #FEF3C7; color: #B45309; }
+  .role-school_admin { background: #E5E7EB; color: #374151; }
+  .role-district_admin { background: #DCFCE7; color: #166534; }
+  .role-contact { background: #FCE7F3; color: #9D174D; }
+  .role-unknown { background: #F3F4F6; color: #6B7280; }
+
+  .empty-state {
+    padding: 16px;
+    text-align: center;
+    color: #6b7280;
+    font-size: 0.9rem;
+  }
+</style>
+
+<div class="admin-container">
+  <div class="page-title">
+    <h1>Admin Dashboard</h1>
+    <span class="page-subtitle">Manage rostering & users from Clever</span>
+  </div>
+
+  <!-- Top cards: Auto-Roster & CSV Upload -->
+  <div class="card-grid">
+    <!-- Auto-Roster -->
+    <div class="card">
+      <h3>🔄 Auto-Roster (API)</h3>
+      <p>Pull fresh roster data directly from Clever using your district token.</p>
+      <small>Tip: run this after changes in your SIS or at the start of a new term.</small>
+      <form action="/admin/sync" method="POST" style="margin-top: 12px;">
+        <button type="submit" class="btn btn-primary">
+          🔄 Sync Now
+        </button>
+      </form>
+    </div>
+
+<div class="card">
+  <h3>🧹 Cleanup Duplicates</h3>
+  <p>Remove duplicate users that share the same email. Prefers Clever-synced users over manual CSV rows.</p>
+  <small>Tip: run this once after early CSV experiments.</small>
+
+  <form action="/admin/cleanup-duplicates" method="POST" style="margin-top: 12px;">
+    <button type="submit" class="btn btn-secondary">
+      🧹 Clean Up Users
+    </button>
+  </form>
+</div>
+
+
+    <!-- CSV Upload -->
+    <div class="card">
+      <h3>📄 Roster Upload (CSV)</h3>
+      <p>Upload a CSV file with <strong>name, role, email</strong> columns to manually add users.</p>
+      <small>Good for demos, test users, or non-Clever accounts.</small>
+
+      <form action="/admin/upload" method="POST" enctype="multipart/form-data" style="margin-top: 12px;">
+        <input type="file" name="roster" accept=".csv" required class="upload-input">
+        <button type="submit" class="btn btn-secondary">
+          ⬆️ Upload Roster
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Role summary "matrix" -->
+  <% 
+    const counts = {};
+    if (Array.isArray(allUsers)) {
+      allUsers.forEach(function(u) {
+        const r = u.role || 'unknown';
+        counts[r] = (counts[r] || 0) + 1;
+      });
+    }
+  %>
+
+  <div class="stat-grid">
+    <div class="stat-pill">
+      <span class="label">Students</span>
+      <span class="value"><%= counts['student'] || 0 %></span>
+    </div>
+    <div class="stat-pill">
+      <span class="label">Teachers</span>
+      <span class="value"><%= counts['teacher'] || 0 %></span>
+    </div>
+    <div class="stat-pill">
+      <span class="label">School Admins</span>
+      <span class="value"><%= counts['school_admin'] || 0 %></span>
+    </div>
+    <div class="stat-pill">
+      <span class="label">District Admins</span>
+      <span class="value"><%= counts['district_admin'] || 0 %></span>
+    </div>
+    <div class="stat-pill">
+      <span class="label">Contacts</span>
+      <span class="value"><%= counts['contact'] || 0 %></span>
+    </div>
+    <div class="stat-pill">
+      <span class="label">Unknown</span>
+      <span class="value"><%= counts['unknown'] || 0 %></span>
+    </div>
+  </div>
+
+  <!-- Users table -->
+  <div class="user-table-card">
+    <div class="user-table-header">
+      <h3>Current Users in Database</h3>
+      <div class="filters">
+        <input
+          type="text"
+          id="userSearch"
+          placeholder="Search name or email…"
+          autocomplete="off"
+        />
+        <select id="roleFilter">
+          <option value="">All roles</option>
+          <option value="student">Students</option>
+          <option value="teacher">Teachers</option>
+          <option value="school_admin">School admins</option>
+          <option value="district_admin">District admins</option>
+          <option value="contact">Contacts</option>
+          <option value="unknown">Unknown</option>
+        </select>
+      </div>
+    </div>
+
+    <% if (typeof allUsers !== 'undefined' && allUsers.length > 0) { %>
+      <div class="user-table-wrapper">
+        <table class="user-table" id="userTable">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Role</th>
+              <th>Email</th>
+              <th>Clever ID</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% allUsers.forEach(function(u) { 
+              const role = u.role || 'unknown';
+            %>
+              <tr
+                data-role="<%= role %>"
+                data-name="<%= (u.name || '').toLowerCase() %>"
+                data-email="<%= (u.email || '').toLowerCase() %>"
+              >
+                <td><%= u.name %></td>
+                <td>
+                  <span class="role-pill role-<%= role %>">
+                    <%= role %>
+                  </span>
+                </td>
+                <td><%= u.email || '-' %></td>
+                <td><code><%= u.cleverId || '' %></code></td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <div class="empty-state">
+        No users found in the database yet. Try running a Clever sync or uploading a CSV.
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const searchInput = document.getElementById('userSearch');
+    const roleSelect = document.getElementById('roleFilter');
+    const table = document.getElementById('userTable');
+    if (!table) return;
+
+    const rows = Array.from(table.querySelectorAll('tbody tr'));
+
+    function applyFilters() {
+      const search = (searchInput.value || '').toLowerCase();
+      const role = roleSelect.value;
+
+      rows.forEach(row => {
+        const rowRole = row.getAttribute('data-role') || '';
+        const name = row.getAttribute('data-name') || '';
+        const email = row.getAttribute('data-email') || '';
+
+        const matchesRole = !role || rowRole === role;
+        const matchesSearch =
+          !search ||
+          name.includes(search) ||
+          email.includes(search);
+
+        if (matchesRole && matchesSearch) {
+          row.classList.remove('hidden');
+        } else {
+          row.classList.add('hidden');
+        }
+      });
+    }
+
+    if (searchInput && roleSelect && rows.length) {
+      searchInput.addEventListener('input', applyFilters);
+      roleSelect.addEventListener('change', applyFilters);
+    }
+  })();
+</script>
+

@@ -1,0 +1,10 @@
+<h1>Welcome to Clever Demo Academy</h1>
+<% if (!user) { %>
+    <p>Please log in to continue.</p>
+    <a href="/login/clever">
+        <button style="padding: 10px; background: #2F6C95; color: white;">Log In with Clever</button>
+    </a>
+<% } else { %>
+    <p>You are already logged in as <%= user.name.first %>!</p>
+    <a href="/dashboard">Go to Dashboard</a>
+<% } %>
