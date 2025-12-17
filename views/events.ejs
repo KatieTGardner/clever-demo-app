@@ -1,0 +1,180 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Clever Events Viewer</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+        background: #f5f7fb;
+        margin: 0;
+        padding: 24px;
+        color: #111827;
+      }
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+      }
+      a { color: #1d4ed8; text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      h1 { margin: 8px 0 4px 0; font-size: 40px; }
+      p.sub { margin: 0 0 14px 0; color: #6b7280; }
+
+      .btn {
+        border: none;
+        border-radius: 999px;
+        padding: 10px 16px;
+        font-weight: 700;
+        cursor: pointer;
+        background: #2F6C95;
+        color: white;
+      }
+      .btn:hover { filter: brightness(0.96); }
+
+      .card {
+        background: white;
+        border-radius: 14px;
+        padding: 14px 16px;
+        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+        margin-top: 14px;
+      }
+
+      .banner {
+        margin-top: 10px;
+        color: #166534;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      form.filters {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin: 12px 0 10px;
+      }
+      select, input {
+        border-radius: 999px;
+        border: 1px solid #d1d5db;
+        padding: 8px 12px;
+        font-size: 14px;
+        outline: none;
+        background: white;
+      }
+      input { min-width: 240px; }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+      }
+      thead {
+        background: #f3f4f6;
+      }
+      th, td {
+        text-align: left;
+        padding: 10px 12px;
+        border-bottom: 1px solid #e5e7eb;
+        vertical-align: top;
+      }
+      th {
+        color: #6b7280;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      code { font-size: 12px; }
+      .muted { color: #6b7280; }
+      .right { text-align: right; }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="topbar">
+        <div>
+          <a href="/admin">← Admin</a>
+          <h1>Clever Events Viewer</h1>
+          <p class="sub">Pull and inspect recent Clever Events for debugging.</p>
+
+          <% if ((fetched || 0) > 0) { %>
+            <div class="banner">✅ Fetched <%= fetched %> · Inserted <%= inserted %> new</div>
+          <% } %>
+        </div>
+
+        <form method="POST" action="/admin/events/fetch">
+          <button class="btn" type="submit">Fetch Latest Events</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <!-- Filters (show even if there are no events yet) -->
+        <form class="filters" method="GET" action="/admin/events">
+          <select name="type">
+            <option value="">All event types</option>
+            <option value="created" <%= (filters && filters.type === 'created') ? 'selected' : '' %>>created</option>
+            <option value="updated" <%= (filters && filters.type === 'updated') ? 'selected' : '' %>>updated</option>
+            <option value="deleted" <%= (filters && filters.type === 'deleted') ? 'selected' : '' %>>deleted</option>
+          </select>
+
+          <select name="recordType">
+            <option value="">All record types</option>
+            <option value="users" <%= (filters && filters.recordType === 'users') ? 'selected' : '' %>>users</option>
+            <option value="sections" <%= (filters && filters.recordType === 'sections') ? 'selected' : '' %>>sections</option>
+            <option value="schools" <%= (filters && filters.recordType === 'schools') ? 'selected' : '' %>>schools</option>
+            <option value="districts" <%= (filters && filters.recordType === 'districts') ? 'selected' : '' %>>districts</option>
+            <option value="terms" <%= (filters && filters.recordType === 'terms') ? 'selected' : '' %>>terms</option>
+          </select>
+
+          <input
+            name="q"
+            placeholder="Search payload / recordId…"
+            value="<%= (filters && filters.q) ? filters.q : '' %>"
+          />
+
+          <select name="limit">
+            <% [50,100,200,500].forEach(function(n){ %>
+              <option value="<%= n %>" <%= Number((filters && filters.limit) || 200) === n ? 'selected' : '' %>><%= n %></option>
+            <% }) %>
+          </select>
+
+          <button class="btn" type="submit">Apply</button>
+          <a href="/admin/events" class="muted">Clear</a>
+        </form>
+
+        <% if (!events || events.length === 0) { %>
+          <p class="muted">No events saved yet. Click <b>Fetch Latest Events</b>.</p>
+        <% } else { %>
+          <table>
+            <thead>
+              <tr>
+                <th>Created</th>
+                <th>Event Type</th>
+                <th>Record</th>
+                <th>Event ID</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% events.forEach(function(ev) { %>
+                <tr>
+                  <td><%= ev.created %></td>
+                  <td><%= ev.eventType %></td>
+                  <td><%= (ev.recordType || '-') %> / <%= (ev.recordId || '-') %></td>
+                  <td><code><%= ev.cleverEventId %></code></td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        <% } %>
+      </div>
+    </div>
+  </body>
+</html>

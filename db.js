@@ -76,6 +76,18 @@ db.exec(`
   );
 `);
 
+// EVENTS TABLE
+db.exec(`
+  CREATE TABLE IF NOT EXISTS events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cleverEventId TEXT UNIQUE,
+    created TEXT,
+    eventType TEXT,
+    recordType TEXT,
+    recordId TEXT,
+    payload TEXT
+  );
+`);
 
 
 console.log("Database initialized!");

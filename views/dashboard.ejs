@@ -1,396 +1,53 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8" />
-  <title>Dashboard</title>
-  <style>
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f5f7fb;
-      margin: 0;
-      padding: 0;
-      color: #111827;
-    }
-
-    .page-shell {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 24px 20px 40px;
-    }
-
-    .top-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-
-    .top-left {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .app-title {
-      font-size: 1.2rem;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-      color: #111827;
-    }
-
-    .user-line {
-      font-size: 0.9rem;
-      color: #6b7280;
-    }
-
-    .role-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 3px 10px;
-      border-radius: 999px;
-      background: #e5f0ff;
-      color: #1d4ed8;
-      font-size: 0.8rem;
-      font-weight: 600;
-      text-transform: capitalize;
-    }
-
-    .schools-line {
-      font-size: 0.85rem;
-      color: #6b7280;
-    }
-
-    .top-right {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .role-toggle {
-      display: inline-flex;
-      border-radius: 999px;
-      padding: 2px;
-      background: #e5e7eb;
-    }
-
-    .role-toggle-btn {
-      border-radius: 999px;
-      padding: 4px 10px;
-      font-size: 0.78rem;
-      text-decoration: none;
-      color: #4b5563;
-      font-weight: 500;
-    }
-
-    .role-toggle-btn.active {
-      background: #111827;
-      color: #f9fafb;
-    }
-
-    .page-heading {
-      margin: 10px 0 4px;
-      font-size: 1.4rem;
-    }
-
-    .page-subtitle {
-      margin: 0 0 18px;
-      font-size: 0.95rem;
-      color: #6b7280;
-    }
-
-    .summary-bar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 18px;
-    }
-
-    .summary-pill {
-      background: #ffffff;
-      border-radius: 999px;
-      padding: 6px 12px;
-      font-size: 0.8rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
-      color: #374151;
-    }
-
-    .summary-pill b {
-      font-weight: 700;
-    }
-
-    .class-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 14px;
-    }
-
-    .class-card {
-      background: #ffffff;
-      border-radius: 10px;
-      padding: 14px 16px 10px;
-      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .class-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 10px;
-    }
-
-    .class-name {
-      font-weight: 600;
-      font-size: 0.98rem;
-    }
-
-    .school-tag {
-      font-size: 0.75rem;
-      color: #6b7280;
-    }
-
-    .class-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      font-size: 0.78rem;
-      color: #4b5563;
-    }
-
-    .meta-pill {
-      border-radius: 999px;
-      padding: 2px 8px;
-      background: #f3f4f6;
-    }
-
-    .list-label {
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: #4b5563;
-      margin-top: 4px;
-      margin-bottom: 2px;
-    }
-
-    .people-list {
-      margin: 0;
-      padding-left: 16px;
-      font-size: 0.8rem;
-      color: #374151;
-      max-height: 96px;
-      overflow: auto;
-    }
-
-    .people-list li {
-      margin-bottom: 2px;
-    }
-
-    .empty-state {
-      background: #fff;
-      border-radius: 12px;
-      padding: 20px 18px;
-      text-align: left;
-      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
-      font-size: 0.95rem;
-      color: #4b5563;
-    }
-
-    .empty-state h3 {
-      margin-top: 0;
-      margin-bottom: 6px;
-      font-size: 1rem;
-    }
-
-    .empty-state p {
-      margin: 2px 0;
-    }
-  </style>
-</head>
-<body>
-  <%
-    const fullName =
-      (dbUser && dbUser.name) ||
-      (user && user.name && (user.name.first + ' ' + (user.name.last || ''))) ||
-      'User';
-
-    const prettyRole = (role || activeRole || 'student').replace('_', ' ');
-    const classesList = Array.isArray(classes) ? classes : [];
-
-    const totalClasses = classesList.length;
-
-    function countUniquePeople(classesArr, property) {
-      const ids = new Set();
-      classesArr.forEach(c => {
-        const list = c[property] || [];
-        list.forEach(p => {
-          if (p.cleverId) ids.add(p.cleverId);
-        });
-      });
-      return ids.size;
-    }
-
-    const totalStudents = countUniquePeople(classesList, 'students');
-    const totalTeachers = countUniquePeople(classesList, 'teachers');
-
-    const hasMultipleRoles = Array.isArray(roles) && roles.length > 1;
-    const schoolNames = (userSchools || []).map(s => s.name).join(', ');
-  %>
-
-  <div class="page-shell">
-    <!-- Top bar -->
-    <div class="top-bar">
-      <div class="top-left">
-        <div class="app-title">Clever Demo – Class Dashboard</div>
-        <div class="user-line">
-          Signed in as <b><%= fullName %></b>
-          <span class="role-chip">
-            <span>Role:</span>
-            <span><%= prettyRole %></span>
-          </span>
-        </div>
-        <% if (schoolNames) { %>
-          <div class="schools-line">
-            Schools: <%= schoolNames %>
-          </div>
-        <% } %>
-      </div>
-
-      <div class="top-right">
-        <% if (hasMultipleRoles) { %>
-          <div class="role-toggle">
-            <% roles.forEach(function(r) { %>
-              <a
-                href="/dashboard?role=<%= r %>"
-                class="role-toggle-btn <%= (r === role) ? 'active' : '' %>"
-              >
-                <%= r.replace('_', ' ') %>
-              </a>
-            <% }); %>
-          </div>
-        <% } %>
-      </div>
-    </div>
-
-    <!-- Heading + subtitle vary by role -->
-    <h1 class="page-heading">
-      <% if (role === 'teacher') { %>
-        Your Classes
-      <% } else if (role === 'school_admin') { %>
-        Classes at Your School
-      <% } else if (role === 'district_admin') { %>
-        District Classes Overview
-      <% } else { %>
-        Your Class Schedule
-      <% } %>
-    </h1>
-
-    <p class="page-subtitle">
-      <% if (role === 'teacher') { %>
-        View the sections you teach and the students enrolled in each class.
-      <% } else if (role === 'school_admin') { %>
-        Browse all sections at your school(s), with a quick view of teachers and students.
-      <% } else if (role === 'district_admin') { %>
-        High-level view of all sections across the district, including rosters.
-      <% } else { %>
-        See your classes and who is teaching them.
-      <% } %>
-    </p>
-
-    <!-- Summary bar -->
-    <div class="summary-bar">
-      <div class="summary-pill">
-        <span>📚</span>
-        <span><b><%= totalClasses %></b> class<%= totalClasses === 1 ? '' : 'es' %></span>
-      </div>
-
-      <% if (role === 'teacher' || role === 'school_admin' || role === 'district_admin') { %>
-        <div class="summary-pill">
-          <span>👩‍🎓</span>
-          <span><b><%= totalStudents %></b> unique student<%= totalStudents === 1 ? '' : 's' %></span>
-        </div>
-      <% } %>
-
-      <% if (role === 'school_admin' || role === 'district_admin' || role === 'student') { %>
-        <div class="summary-pill">
-          <span>👩‍🏫</span>
-          <span><b><%= totalTeachers %></b> unique teacher<%= totalTeachers === 1 ? '' : 's' %></span>
-        </div>
-      <% } %>
-    </div>
-
-    <!-- Classes grid -->
-    <% if (classesList.length === 0) { %>
-      <div class="empty-state">
-        <h3>No classes found for this role.</h3>
-        <% if (role === 'teacher') { %>
-          <p>It looks like you’re not currently assigned to any sections as a teacher in this demo roster.</p>
-        <% } else if (role === 'school_admin') { %>
-          <p>We don’t see any sections for your school(s) in the synced data yet.</p>
-        <% } else if (role === 'district_admin') { %>
-          <p>No sections were found in the synced Clever data. Try running a sync from the Admin Dashboard.</p>
-        <% } else { %>
-          <p>We couldn’t find any sections for you as a student in this demo roster.</p>
-        <% } %>
-      </div>
-    <% } else { %>
-      <div class="class-grid">
-        <% classesList.forEach(function(cls) { 
-          const students = cls.students || [];
-          const teachers = cls.teachers || [];
-        %>
-          <div class="class-card">
-            <div class="class-header">
-              <div>
-                <div class="class-name"><%= cls.name || 'Untitled Section' %></div>
-                <% if (cls.schoolName) { %>
-                  <div class="school-tag"><%= cls.schoolName %></div>
-                <% } else if (cls.schoolId) { %>
-                  <div class="school-tag">School ID: <%= cls.schoolId %></div>
-                <% } %>
-              </div>
-            </div>
-
-            <div class="class-meta">
-              <% if (students.length && (role === 'teacher' || role === 'school_admin' || role === 'district_admin')) { %>
-                <span class="meta-pill"><b><%= students.length %></b> student<%= students.length === 1 ? '' : 's' %></span>
-              <% } %>
-
-              <% if (teachers.length && (role === 'student' || role === 'school_admin' || role === 'district_admin')) { %>
-                <span class="meta-pill"><b><%= teachers.length %></b> teacher<%= teachers.length === 1 ? '' : 's' %></span>
-              <% } %>
-            </div>
-
-            <% if (role === 'teacher' || role === 'school_admin' || role === 'district_admin') { %>
-              <% if (students.length) { %>
-                <div class="list-label">Students</div>
-                <ul class="people-list">
-                  <% students.forEach(function(s) { %>
-                    <li><%= s.name %> <span style="color:#9ca3af;font-size:0.75rem;">(<%= s.email || 'no email' %>)</span></li>
-                  <% }); %>
-                </ul>
-              <% } %>
-            <% } %>
-
-            <% if (role === 'student' || role === 'school_admin' || role === 'district_admin') { %>
-              <% if (teachers.length) { %>
-                <div class="list-label">Teachers</div>
-                <ul class="people-list">
-                  <% teachers.forEach(function(t) { %>
-                    <li><%= t.name %> <span style="color:#9ca3af;font-size:0.75rem;">(<%= t.email || 'no email' %>)</span></li>
-                  <% }); %>
-                </ul>
-              <% } %>
-            <% } %>
-          </div>
-        <% }); %>
-      </div>
-    <% } %>
-  </div>
-</body>
-</html>
+<% const fullName = (dbUser && dbUser.name) || (user && user.name && (user.name.first + ' ' + (user.name.last || ''))) || 'User'; const prettyRole = (role || activeRole || 'student').replace('_', ' '); const classesList = Array.isArray(classes) ? classes : []; const totalClasses = classesList.length; function countUniquePeople(classesArr, property) { const ids = new Set(); classesArr.forEach(c => { const list = c[property] || []; list.forEach(p => { if (p.cleverId) ids.add(p.cleverId); }); }); return ids.size; } const totalStudents = countUniquePeople(classesList, 'students'); const totalTeachers = countUniquePeople(classesList, 'teachers'); const hasMultipleRoles = Array.isArray(roles) && roles.length > 1; const schoolNames = (userSchools || []).map(s => s.name).join(', '); %>
+Clever Demo – Class Dashboard
+Signed in as <%= fullName %>
+Role:
+<%= PrettyRole %>
+<% if (schoolNames) { %>
+Schools: <%= schoolNames %>
+<% } %> <% if (hasMultipleRoles) { %> <% roles.forEach(function(r) { %>
+<%= r.replace('_', ' ') %>
+<% }); %> <% } %>
+<% if (role === 'teacher') { %> Your Classes <% } else if (role === 'school_admin') { %> Classes at Your School <% } else if (role === 'district_admin') { %> District Classes Overview <% } else { %> Your Class Schedule <% } %>
+<% if (role === 'teacher') { %> View the sections you teach and the students enrolled in each class. <% } else if (role === 'school_admin') { %> Browse all sections at your school(s), with a quick view of teachers and students. <% } else if (role === 'district_admin') { %> High-level view of all sections across the district, including rosters. <% } else { %> See your classes and who is teaching them. <% } %>
+📚
+<%= totalClasses %> class<%= totalClasses === 1 ? '' : 'es' %>
+<% if (role === 'teacher' || role === 'school_admin' || role === 'district_admin') { %>
+👩‍🎓
+<%= totalStudents %> unique student<%= totalStudents === 1 ? '' : 's' %>
+<% } %> <% if (role === 'school_admin' || role === 'district_admin' || role === 'student') { %>
+👩‍🏫
+<%= totalTeachers %> unique teacher<%= totalTeachers === 1 ? '' : 's' %>
+<% } %> <% if (classesList.length === 0) { %>
+No classes found for this role.
+<% if (role === 'teacher') { %>
+It looks like you’re not currently assigned to any sections as a teacher in this demo roster.
+<% } else if (role === 'school_admin') { %>
+We don’t see any sections for your school(s) in the synced data yet.
+<% } else if (role === 'district_admin') { %>
+No sections were found in the synced Clever data. Try running a sync from the Admin Dashboard.
+<% } else { %>
+We couldn’t find any sections for you as a student in this demo roster.
+<% } %>
+<% } else { %> <% classesList.forEach(function(cls) { const students = cls.students || []; const teachers = cls.teachers || []; %>
+<%= cls.name || 'Untitled Section' %>
+<% if (cls.schoolName) { %>
+<%= cls.schoolName %>
+<% } else if (cls.schoolId) { %>
+School ID: <%= cls.schoolId %>
+<% } %>
+<% if (students.length && (role === 'teacher' || role === 'school_admin' || role === 'district_admin')) { %>
+<%= students.length %> student<%= students.length === 1 ? '' : 's' %>
+<% } %> <% if (teachers.length && (role === 'student' || role === 'school_admin' || role === 'district_admin')) { %>
+<%= teachers.length %> teacher<%= teachers.length === 1 ? '' : 's' %>
+<% } %> <% if (role === 'teacher' || role === 'school_admin' || role === 'district_admin') { %> <% if (students.length) { %>
+Students
+	•	<% students.forEach(function(s) { %>
+	•	<%= s.name %> (<%= s.email || 'no email' %>)
+	•	<% }); %>
+<% } %> <% } %> <% if (role === 'student' || role === 'school_admin' || role === 'district_admin') { %> <% if (teachers.length) { %>
+Teachers
+	•	<% teachers.forEach(function(t) { %>
+	•	<%= t.name %> (<%= t.email || 'no email' %>)
+	•	<% }); %>
+<% } %> <% } %> <% }); %> <% } %>

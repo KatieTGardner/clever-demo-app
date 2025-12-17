@@ -1,3 +1,5 @@
+<!-- admin.ejs -->
+
 <style>
   body {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -40,18 +42,22 @@
     border-radius: 10px;
     padding: 16px 18px;
     box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-height: 170px;
   }
 
   .card h3 {
-    margin-top: 0;
-    margin-bottom: 4px;
+    margin: 0;
     display: flex;
     align-items: center;
     gap: 6px;
   }
 
   .card p {
-    margin-top: 0;
+    margin: 0;
     color: #6b7280;
     font-size: 0.92rem;
   }
@@ -61,6 +67,11 @@
     font-size: 0.8rem;
   }
 
+  .card-actions {
+    margin-top: auto;
+    padding-top: 12px;
+  }
+
   .btn {
     border: none;
     border-radius: 999px;
@@ -68,9 +79,15 @@
     font-weight: 600;
     cursor: pointer;
     font-size: 0.9rem;
+
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
+
+    height: 38px;
+    line-height: 1;
+    white-space: nowrap;
   }
 
   .btn-primary {
@@ -87,8 +104,25 @@
     filter: brightness(0.96);
   }
 
+  /* Anchor tags styled like buttons should NOT look like links */
+  a.btn,
+  a.btn:visited,
+  a.btn:hover,
+  a.btn:active {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .upload-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
   .upload-input {
     font-size: 0.9rem;
+    max-width: 210px;
   }
 
   .stat-grid {
@@ -183,6 +217,7 @@
   table.user-table td {
     padding: 8px 10px;
     text-align: left;
+    vertical-align: top;
   }
 
   table.user-table th {
@@ -207,6 +242,7 @@
     border-radius: 999px;
     font-size: 0.75rem;
     font-weight: 600;
+    margin: 2px 6px 2px 0;
   }
 
   .role-student { background: #DBEAFE; color: #1D4ED8; }
@@ -215,6 +251,14 @@
   .role-district_admin { background: #DCFCE7; color: #166534; }
   .role-contact { background: #FCE7F3; color: #9D174D; }
   .role-unknown { background: #F3F4F6; color: #6B7280; }
+
+  /* Table link styling (nice but not shouty) */
+  .user-table a {
+    text-decoration: none;
+  }
+  .user-table a:hover {
+    text-decoration: underline;
+  }
 
   .empty-state {
     padding: 16px;
@@ -230,32 +274,44 @@
     <span class="page-subtitle">Manage rostering & users from Clever</span>
   </div>
 
-  <!-- Top cards: Auto-Roster & CSV Upload -->
+  <!-- Top cards -->
   <div class="card-grid">
     <!-- Auto-Roster -->
     <div class="card">
       <h3>🔄 Auto-Roster (API)</h3>
       <p>Pull fresh roster data directly from Clever using your district token.</p>
       <small>Tip: run this after changes in your SIS or at the start of a new term.</small>
-      <form action="/admin/sync" method="POST" style="margin-top: 12px;">
-        <button type="submit" class="btn btn-primary">
-          🔄 Sync Now
-        </button>
-      </form>
+
+      <div class="card-actions">
+        <form action="/admin/sync" method="POST">
+          <button type="submit" class="btn btn-primary">🔄 Sync Now</button>
+        </form>
+      </div>
     </div>
 
-<div class="card">
-  <h3>🧹 Cleanup Duplicates</h3>
-  <p>Remove duplicate users that share the same email. Prefers Clever-synced users over manual CSV rows.</p>
-  <small>Tip: run this once after early CSV experiments.</small>
+    <!-- Cleanup Duplicates -->
+    <div class="card">
+      <h3>🧹 Cleanup Duplicates</h3>
+      <p>Remove duplicate users that share the same email. Prefers Clever-synced users over manual CSV rows.</p>
+      <small>Tip: run this once after early CSV experiments.</small>
 
-  <form action="/admin/cleanup-duplicates" method="POST" style="margin-top: 12px;">
-    <button type="submit" class="btn btn-secondary">
-      🧹 Clean Up Users
-    </button>
-  </form>
-</div>
+      <div class="card-actions">
+        <form action="/admin/cleanup-duplicates" method="POST">
+          <button type="submit" class="btn btn-secondary">🧹 Clean Up Users</button>
+        </form>
+      </div>
+    </div>
 
+    <!-- Clever Events -->
+    <div class="card">
+      <h3>📬 Clever Events</h3>
+      <p>View recent roster change events from Clever (creates, updates, deletes).</p>
+      <small>Useful for debugging sync timing and data changes.</small>
+
+      <div class="card-actions">
+        <a href="/admin/events" class="btn btn-primary">View Clever Events</a>
+      </div>
+    </div>
 
     <!-- CSV Upload -->
     <div class="card">
@@ -263,20 +319,20 @@
       <p>Upload a CSV file with <strong>name, role, email</strong> columns to manually add users.</p>
       <small>Good for demos, test users, or non-Clever accounts.</small>
 
-      <form action="/admin/upload" method="POST" enctype="multipart/form-data" style="margin-top: 12px;">
-        <input type="file" name="roster" accept=".csv" required class="upload-input">
-        <button type="submit" class="btn btn-secondary">
-          ⬆️ Upload Roster
-        </button>
-      </form>
+      <div class="card-actions">
+        <form action="/admin/upload" method="POST" enctype="multipart/form-data" class="upload-row">
+          <input type="file" name="roster" accept=".csv" required class="upload-input">
+          <button type="submit" class="btn btn-secondary">⬆️ Upload Roster</button>
+        </form>
+      </div>
     </div>
   </div>
 
-  <!-- Role summary "matrix" -->
-  <% 
+  <!-- Role counts -->
+  <%
     const counts = {};
     if (Array.isArray(allUsers)) {
-      allUsers.forEach(function(u) {
+      allUsers.forEach(u => {
         const r = u.role || 'unknown';
         counts[r] = (counts[r] || 0) + 1;
       });
@@ -284,41 +340,23 @@
   %>
 
   <div class="stat-grid">
-    <div class="stat-pill">
-      <span class="label">Students</span>
-      <span class="value"><%= counts['student'] || 0 %></span>
-    </div>
-    <div class="stat-pill">
-      <span class="label">Teachers</span>
-      <span class="value"><%= counts['teacher'] || 0 %></span>
-    </div>
-    <div class="stat-pill">
-      <span class="label">School Admins</span>
-      <span class="value"><%= counts['school_admin'] || 0 %></span>
-    </div>
-    <div class="stat-pill">
-      <span class="label">District Admins</span>
-      <span class="value"><%= counts['district_admin'] || 0 %></span>
-    </div>
-    <div class="stat-pill">
-      <span class="label">Contacts</span>
-      <span class="value"><%= counts['contact'] || 0 %></span>
-    </div>
-    <div class="stat-pill">
-      <span class="label">Unknown</span>
-      <span class="value"><%= counts['unknown'] || 0 %></span>
-    </div>
+    <div class="stat-pill"><span class="label">Students</span><span class="value"><%= counts.student || 0 %></span></div>
+    <div class="stat-pill"><span class="label">Teachers</span><span class="value"><%= counts.teacher || 0 %></span></div>
+    <div class="stat-pill"><span class="label">School Admins</span><span class="value"><%= counts.school_admin || 0 %></span></div>
+    <div class="stat-pill"><span class="label">District Admins</span><span class="value"><%= counts.district_admin || 0 %></span></div>
+    <div class="stat-pill"><span class="label">Contacts</span><span class="value"><%= counts.contact || 0 %></span></div>
+    <div class="stat-pill"><span class="label">Unknown</span><span class="value"><%= counts.unknown || 0 %></span></div>
   </div>
 
-  <!-- Users table -->
+  <!-- Users Data Browser -->
   <div class="user-table-card">
     <div class="user-table-header">
-      <h3>Current Users in Database</h3>
+      <h3>User Data Browser</h3>
       <div class="filters">
         <input
           type="text"
           id="userSearch"
-          placeholder="Search name or email…"
+          placeholder="Search name, email, or school…"
           autocomplete="off"
         />
         <select id="roleFilter">
@@ -330,37 +368,59 @@
           <option value="contact">Contacts</option>
           <option value="unknown">Unknown</option>
         </select>
+        <select id="schoolFilter">
+          <option value="">All schools</option>
+          <% if (Array.isArray(allSchools)) { %>
+            <% allSchools.forEach(function(s) { %>
+              <option value="<%= (s.name || '').toLowerCase() %>"><%= s.name %></option>
+            <% }); %>
+          <% } %>
+        </select>
       </div>
     </div>
 
-    <% if (typeof allUsers !== 'undefined' && allUsers.length > 0) { %>
+    <% if (Array.isArray(allUsers) && allUsers.length > 0) { %>
       <div class="user-table-wrapper">
         <table class="user-table" id="userTable">
           <thead>
             <tr>
               <th>Name</th>
-              <th>Role</th>
+              <th>Roles</th>
+              <th>Schools</th>
               <th>Email</th>
               <th>Clever ID</th>
             </tr>
           </thead>
           <tbody>
-            <% allUsers.forEach(function(u) { 
-              const role = u.role || 'unknown';
+            <% allUsers.forEach(function(u) {
+              const primaryRole = u.role || 'unknown';
+              const rolesCsv    = u.rolesCsv || primaryRole;
+              const schoolsCsv  = u.schoolsCsv || '';
             %>
               <tr
-                data-role="<%= role %>"
-                data-name="<%= (u.name || '').toLowerCase() %>"
-                data-email="<%= (u.email || '').toLowerCase() %>"
+                data-role="<%= primaryRole %>"
+                data-roles="<%= String(rolesCsv).toLowerCase() %>"
+                data-schools="<%= String(schoolsCsv).toLowerCase() %>"
+                data-name="<%= String(u.name || '').toLowerCase() %>"
+                data-email="<%= String(u.email || '').toLowerCase() %>"
               >
-                <td><%= u.name %></td>
+                <td><%= u.name || '-' %></td>
                 <td>
-                  <span class="role-pill role-<%= role %>">
-                    <%= role %>
-                  </span>
+                  <% String(rolesCsv).split(',').forEach(function(r) {
+                       const trimmed = (r || '').trim() || 'unknown';
+                  %>
+                    <span class="role-pill role-<%= trimmed %>"><%= trimmed %></span>
+                  <% }); %>
                 </td>
+                <td><%= schoolsCsv || '-' %></td>
                 <td><%= u.email || '-' %></td>
-                <td><code><%= u.cleverId || '' %></code></td>
+                <td>
+                  <% if (u.cleverId) { %>
+                    <a href="/admin/users/<%= u.cleverId %>"><code><%= u.cleverId %></code></a>
+                  <% } else { %>
+                    -
+                  <% } %>
+                </td>
               </tr>
             <% }); %>
           </tbody>
@@ -376,40 +436,46 @@
 
 <script>
   (function() {
-    const searchInput = document.getElementById('userSearch');
-    const roleSelect = document.getElementById('roleFilter');
-    const table = document.getElementById('userTable');
+    const searchInput  = document.getElementById('userSearch');
+    const roleSelect   = document.getElementById('roleFilter');
+    const schoolSelect = document.getElementById('schoolFilter');
+    const table        = document.getElementById('userTable');
     if (!table) return;
 
     const rows = Array.from(table.querySelectorAll('tbody tr'));
 
     function applyFilters() {
-      const search = (searchInput.value || '').toLowerCase();
-      const role = roleSelect.value;
+      const searchVal = (searchInput.value || '').toLowerCase().trim();
+      const roleVal   = (roleSelect.value || '').trim();
+      const schoolVal = (schoolSelect.value || '').toLowerCase().trim();
 
       rows.forEach(row => {
-        const rowRole = row.getAttribute('data-role') || '';
-        const name = row.getAttribute('data-name') || '';
-        const email = row.getAttribute('data-email') || '';
+        const rowRole    = row.getAttribute('data-role')    || '';
+        const rowRoles   = row.getAttribute('data-roles')   || '';
+        const rowSchools = row.getAttribute('data-schools') || '';
+        const rowName    = row.getAttribute('data-name')    || '';
+        const rowEmail   = row.getAttribute('data-email')   || '';
 
-        const matchesRole = !role || rowRole === role;
+        const matchesRole =
+          !roleVal ||
+          rowRole === roleVal ||
+          rowRoles.split(',').some(r => r.trim() === roleVal);
+
+        const matchesSchool =
+          !schoolVal || rowSchools.includes(schoolVal);
+
         const matchesSearch =
-          !search ||
-          name.includes(search) ||
-          email.includes(search);
+          !searchVal ||
+          rowName.includes(searchVal) ||
+          rowEmail.includes(searchVal) ||
+          rowSchools.includes(searchVal);
 
-        if (matchesRole && matchesSearch) {
-          row.classList.remove('hidden');
-        } else {
-          row.classList.add('hidden');
-        }
+        row.classList.toggle('hidden', !(matchesRole && matchesSchool && matchesSearch));
       });
     }
 
-    if (searchInput && roleSelect && rows.length) {
-      searchInput.addEventListener('input', applyFilters);
-      roleSelect.addEventListener('change', applyFilters);
-    }
+    searchInput.addEventListener('input', applyFilters);
+    roleSelect.addEventListener('change', applyFilters);
+    schoolSelect.addEventListener('change', applyFilters);
   })();
 </script>
-

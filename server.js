@@ -68,8 +68,8 @@ function(req, accessToken, refreshToken, profile, done) {
     const cleverId = profile.data ? profile.data.id : profile.id;
 
     // 4. CHECK/SAVE USER TO DB
-    const user = db.prepare('SELECT * FROM users WHERE cleverId = ?').get(cleverId);
-
+const user = db.prepare('SELECT * FROM users WHERE cleverId = @cleverId')
+  .get({ cleverId });
     if (!user) {
         console.log(`Creating new user: ${firstName} ${lastName} (${userRole})`);
         const insert = db.prepare('INSERT INTO users (cleverId, name, role) VALUES (?, ?, ?)');
@@ -123,20 +123,20 @@ app.get('/dashboard', (req, res) => {
 
   // --- 1) Resolve canonical cleverId via email, preferring IDs used in enrollments ---
   if (loginEmail) {
-    const candidates = db.prepare(
-      'SELECT * FROM users WHERE lower(email) = ?'
-    ).all(loginEmail);
+const candidates = db.prepare(
+  'SELECT * FROM users WHERE lower(email) = @email'
+).all({ email: loginEmail });
 
     if (candidates.length === 1) {
       dbUser   = candidates[0];
       cleverId = dbUser.cleverId;
     } else if (candidates.length > 1) {
       const hasEnrollmentStmt = db.prepare(
-        'SELECT 1 FROM enrollments WHERE userId = ? LIMIT 1'
+        'SELECT 1 FROM enrollments WHERE userId = @userId LIMIT 1'
       );
 
       for (const cand of candidates) {
-        const found = hasEnrollmentStmt.get(cand.cleverId);
+        const found = hasEnrollmentStmt.get({ userId: cand.cleverId });
         if (found) {
           dbUser   = cand;
           cleverId = cand.cleverId;
@@ -154,15 +154,14 @@ app.get('/dashboard', (req, res) => {
   // Fallback: use profileId directly if email lookup failed
   if (!cleverId) {
     cleverId = profileId;
-    dbUser = dbUser || db.prepare(
-      'SELECT * FROM users WHERE cleverId = ?'
-    ).get(cleverId);
+dbUser = dbUser || db.prepare('SELECT * FROM users WHERE cleverId = @cleverId')
+  .get({ cleverId });
   }
 
   // --- 2) Load all roles for this user from user_roles ---
   const roleRows = db.prepare(
-    'SELECT role FROM user_roles WHERE userId = ?'
-  ).all(cleverId);
+  'SELECT role FROM user_roles WHERE userId = @userId'
+).all({ userId: cleverId });
 
   const roles = roleRows.map(r => r.role);
   const primaryRole = dbUser ? (dbUser.role || 'student') : 'student';
@@ -193,9 +192,9 @@ app.get('/dashboard', (req, res) => {
     SELECT s.cleverId, s.name
     FROM user_schools us
     JOIN schools s ON s.cleverId = us.schoolId
-    WHERE us.userId = ?
+    WHERE us.userId = @userId
     ORDER BY s.name
-  `).all(cleverId);
+  `).all({ userId: cleverId });
 
   // Map of all schools by Clever ID (for class cards)
   const allSchools = db.prepare(`
@@ -224,21 +223,21 @@ app.get('/dashboard', (req, res) => {
   let classes = [];
 
   // Shared prepared statements
-  const studentsForSectionStmt = db.prepare(`
-    SELECT u.name, u.email, u.cleverId
-    FROM enrollments e
-    JOIN users u ON u.cleverId = e.userId
-    WHERE e.sectionId = ? AND e.role = 'student'
-    ORDER BY u.name
-  `);
+const studentsForSectionStmt = db.prepare(`
+  SELECT u.name, u.email, u.cleverId
+  FROM enrollments e
+  JOIN users u ON u.cleverId = e.userId
+  WHERE e.sectionId = @sectionId AND e.role = 'student'
+  ORDER BY u.name
+`);
 
-  const teachersForSectionStmt = db.prepare(`
-    SELECT u.name, u.email, u.cleverId
-    FROM enrollments e
-    JOIN users u ON u.cleverId = e.userId
-    WHERE e.sectionId = ? AND e.role = 'teacher'
-    ORDER BY u.name
-  `);
+const teachersForSectionStmt = db.prepare(`
+  SELECT u.name, u.email, u.cleverId
+  FROM enrollments e
+  JOIN users u ON u.cleverId = e.userId
+  WHERE e.sectionId = @sectionId AND e.role = 'teacher'
+  ORDER BY u.name
+`);
 
   if (activeRole === 'teacher') {
     // ----- TEACHER VIEW: only their sections + students -----
@@ -246,11 +245,11 @@ app.get('/dashboard', (req, res) => {
       SELECT s.cleverId AS sectionId, s.name AS sectionName, s.schoolId
       FROM sections s
       JOIN enrollments e ON e.sectionId = s.cleverId
-      WHERE e.userId = ? AND e.role = 'teacher'
+      WHERE e.userId = @userId AND e.role = 'teacher'
       ORDER BY s.name
     `);
 
-    const sections = teacherSectionsStmt.all(cleverId);
+    const sections = teacherSectionsStmt.all({ userId: cleverId });
     console.log('📚 Teacher sections found:', sections.length);
 
     classes = sections.map(sec => ({
@@ -258,7 +257,7 @@ app.get('/dashboard', (req, res) => {
       name: sec.sectionName || 'Untitled Section',
       schoolId: sec.schoolId,
       schoolName: schoolById[sec.schoolId] || null,
-      students: studentsForSectionStmt.all(sec.sectionId)
+      students: studentsForSectionStmt.all({ sectionId: sec.sectionId })
     }));
 
   } else if (activeRole === 'school_admin') {
@@ -280,8 +279,8 @@ app.get('/dashboard', (req, res) => {
       name: sec.sectionName || 'Untitled Section',
       schoolId: sec.schoolId,
       schoolName: schoolById[sec.schoolId] || null,
-      students: studentsForSectionStmt.all(sec.sectionId),
-      teachers: teachersForSectionStmt.all(sec.sectionId)
+    students: studentsForSectionStmt.all({ sectionId: sec.sectionId }),
+    teachers: teachersForSectionStmt.all({ sectionId: sec.sectionId })
     }));
 
   } else if (activeRole === 'district_admin') {
@@ -299,8 +298,8 @@ app.get('/dashboard', (req, res) => {
       name: sec.sectionName || 'Untitled Section',
       schoolId: sec.schoolId,
       schoolName: schoolById[sec.schoolId] || null,
-      students: studentsForSectionStmt.all(sec.sectionId),
-      teachers: teachersForSectionStmt.all(sec.sectionId)
+      students: studentsForSectionStmt.all({ sectionId: sec.sectionId }),
+      teachers: teachersForSectionStmt.all({ sectionId: sec.sectionId })
     }));
 
   } else {
@@ -309,11 +308,11 @@ app.get('/dashboard', (req, res) => {
       SELECT s.cleverId AS sectionId, s.name AS sectionName, s.schoolId
       FROM sections s
       JOIN enrollments e ON e.sectionId = s.cleverId
-      WHERE e.userId = ? AND e.role = 'student'
+      WHERE e.userId = @userId AND e.role = 'student'
       ORDER BY s.name
     `);
 
-    const sections = studentSectionsStmt.all(cleverId);
+    const sections = studentSectionsStmt.all({ userId: cleverId });
     console.log('📚 Student sections found:', sections.length);
 
     classes = sections.map(sec => ({
@@ -321,7 +320,7 @@ app.get('/dashboard', (req, res) => {
       name: sec.sectionName || 'Untitled Section',
       schoolId: sec.schoolId,
       schoolName: schoolById[sec.schoolId] || null,
-      teachers: teachersForSectionStmt.all(sec.sectionId)
+      teachers: teachersForSectionStmt.all({ sectionId: sec.sectionId })
     }));
   }
 
@@ -341,18 +340,41 @@ app.get('/dashboard', (req, res) => {
 app.get('/admin', (req, res) => {
   if (!req.isAuthenticated()) return res.redirect('/');
 
-  // Check for Admin Role (or Super Admin Email)
   const isSuperAdmin  = req.user.email === 'katie.gardner+demo@clever.com';
   const isCleverAdmin = req.user.data && req.user.data.type === 'district_admin';
 
-  if (!isCleverAdmin && !isSuperAdmin) {
+  if (!isSuperAdmin && !isCleverAdmin) {
     return res.send("Access Denied: You are not an Admin!");
   }
 
-  // Fetch all users to show the list
-  const allUsers = db.prepare('SELECT * FROM users').all();
-  res.render('admin', { user: req.user, allUsers });
+  // Enriched users: include aggregated roles + school names from user_roles + schools
+  const allUsers = db.prepare(`
+    SELECT
+      u.*,
+      COALESCE(GROUP_CONCAT(DISTINCT ur.role), u.role) AS rolesCsv,
+      GROUP_CONCAT(DISTINCT s.name) AS schoolsCsv
+    FROM users u
+    LEFT JOIN user_roles   ur ON ur.userId = u.cleverId
+    LEFT JOIN user_schools us ON us.userId = u.cleverId
+    LEFT JOIN schools      s  ON s.cleverId = us.schoolId
+    GROUP BY u.cleverId
+    ORDER BY u.name
+  `).all();
+
+  // For the school filter dropdown
+  const allSchools = db.prepare(`
+    SELECT cleverId, name
+    FROM schools
+    ORDER BY name
+  `).all();
+
+  res.render('admin', {
+    user: req.user,
+    allUsers,
+    allSchools
+  });
 });
+
 
 // --- 5. UPLOAD ROUTE (Manual CSV) ---
 app.post('/admin/upload', upload.single('roster'), (req, res) => {
@@ -530,7 +552,7 @@ app.post('/admin/sync', async (req, res) => {
     for (const record of users) {
       const u = record.data;
       const name  = `${u.name?.first || ''} ${u.name?.last || ''}`.trim() || 'Unknown User';
-      const email = u.email || 'no-email@test.com';
+      const email = u.email || null;
       const role  = classifyUserRole(u);
 
       try {
@@ -644,6 +666,229 @@ app.post('/admin/sync', async (req, res) => {
   }
 });
 
+// Admin: User Inspector
+app.get('/admin/users/:cleverId', (req, res) => {
+  if (!req.isAuthenticated()) return res.redirect('/');
+
+  const isSuperAdmin  = req.user.email === 'katie.gardner+demo@clever.com';
+  const isCleverAdmin = req.user.data && req.user.data.type === 'district_admin';
+
+  if (!isSuperAdmin && !isCleverAdmin) {
+    return res.send("Access Denied: You are not an Admin!");
+  }
+
+  const cleverId = req.params.cleverId;
+
+  // Basic user row
+  const inspected = db.prepare(`
+    SELECT *
+    FROM users
+    WHERE cleverId = @cleverId
+  `).get({ cleverId });
+
+  if (!inspected) {
+    return res.status(404).send('User not found');
+  }
+
+  // Roles for this user
+  const roleRows = db.prepare(`
+    SELECT role
+    FROM user_roles
+    WHERE userId = @userId
+  `).all({ userId: cleverId });
+
+  const roles = roleRows.map(r => r.role);
+  if (roles.length === 0 && inspected.role) {
+    roles.push(inspected.role);
+  }
+
+  // Schools for this user
+  const schools = db.prepare(`
+    SELECT s.*
+    FROM user_schools us
+    JOIN schools s ON s.cleverId = us.schoolId
+    WHERE us.userId = @userId
+    ORDER BY s.name
+  `).all({ userId: cleverId });
+
+  // Sections they teach
+  const teacherSections = db.prepare(`
+    SELECT
+      s.cleverId AS sectionId,
+      s.name     AS sectionName,
+      s.schoolId AS schoolId,
+      sch.name   AS schoolName,
+      COUNT(DISTINCT stu.userId) AS studentCount
+    FROM sections s
+    LEFT JOIN schools sch ON sch.cleverId = s.schoolId
+    JOIN enrollments e    ON e.sectionId = s.cleverId
+                          AND e.role = 'teacher'
+                          AND e.userId = @userId
+    LEFT JOIN enrollments stu ON stu.sectionId = s.cleverId
+                              AND stu.role = 'student'
+    GROUP BY s.cleverId
+    ORDER BY s.name
+  `).all({ userId: cleverId });
+
+  // Sections they are enrolled in as a student
+  const studentSections = db.prepare(`
+    SELECT
+      s.cleverId AS sectionId,
+      s.name     AS sectionName,
+      s.schoolId AS schoolId,
+      sch.name   AS schoolName,
+      COUNT(DISTINCT tch.userId) AS teacherCount
+    FROM sections s
+    LEFT JOIN schools sch ON sch.cleverId = s.schoolId
+    JOIN enrollments e    ON e.sectionId = s.cleverId
+                          AND e.role = 'student'
+                          AND e.userId = @userId
+    LEFT JOIN enrollments tch ON tch.sectionId = s.cleverId
+                              AND tch.role = 'teacher'
+    GROUP BY s.cleverId
+    ORDER BY s.name
+  `).all({ userId: cleverId });
+
+  res.render('user-inspector', {
+    user: req.user,          // logged-in admin
+    inspected,               // the user being inspected
+    roles,
+    schools,
+    teacherSections,
+    studentSections
+  });
+});
+
+app.get('/admin/events', (req, res) => {
+  if (!req.isAuthenticated()) return res.redirect('/');
+
+  const isSuperAdmin  = req.user.email === 'katie.gardner+demo@clever.com';
+  const isCleverAdmin = req.user.data && req.user.data.type === 'district_admin';
+  if (!isSuperAdmin && !isCleverAdmin) {
+    return res.send("Access Denied: You are not an Admin!");
+  }
+
+  // Read filters from query string
+  const type = (req.query.type || '').trim();            // created/updated/deleted
+  const recordType = (req.query.recordType || '').trim();// users/sections/schools/...
+  const q = (req.query.q || '').trim();
+  const limitRaw = Number(req.query.limit || 200);
+  const limit = [50, 100, 200, 500].includes(limitRaw) ? limitRaw : 200;
+
+  const where = [];
+  const params = { limit };
+
+  // Clever event "type" looks like e.g. "users.created"
+  if (type) {
+    where.push(`eventType LIKE @typeLike`);
+    params.typeLike = `%.${type}`;
+  }
+
+  if (recordType) {
+    where.push(`recordType = @recordType`);
+    params.recordType = recordType;
+  }
+
+  if (q) {
+    where.push(`(
+      lower(recordType) LIKE @q OR
+      lower(recordId)   LIKE @q OR
+      lower(payload)    LIKE @q
+    )`);
+    params.q = `%${q.toLowerCase()}%`;
+  }
+
+  const sql = `
+    SELECT
+      id,
+      cleverEventId,
+      created,
+      eventType,
+      recordType,
+      recordId,
+      payload
+    FROM events
+    ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
+    ORDER BY datetime(created) DESC, id DESC
+    LIMIT @limit
+  `;
+
+  const events = db.prepare(sql).all(params);
+
+  res.render('events', {
+    user: req.user,
+    events,
+    filters: { type, recordType, q, limit },
+    fetched: Number(req.query.fetched || 0),
+    inserted: Number(req.query.inserted || 0)
+  });
+});
+
+
+app.post('/admin/events/fetch', async (req, res) => {
+  console.log("📬 /admin/events/fetch HIT");
+
+  if (!req.isAuthenticated()) return res.redirect('/');
+
+
+  const isSuperAdmin  = req.user.email === 'katie.gardner+demo@clever.com';
+  const isCleverAdmin = req.user.data && req.user.data.type === 'district_admin';
+  if (!isSuperAdmin && !isCleverAdmin) return res.send("Access Denied");
+
+  try {
+    // Reuse your existing “get district token” logic.
+    // If you already have a helper, call it here instead.
+    const clientId     = process.env.CLEVER_CLIENT_ID.trim();
+    const clientSecret = process.env.CLEVER_CLIENT_SECRET.trim();
+    const basicAuth    = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+    const distId       = req.user.districtId || '60ca3110e378a7cd8bdc0c45';
+
+    const tokensResp = await axios.get('https://clever.com/oauth/tokens', {
+      headers: { Authorization: `Basic ${basicAuth}` },
+      params: { owner_type: 'district', district: distId }
+    });
+
+    const tokens = tokensResp.data.data || [];
+    const districtToken = String(tokens[0].access_token || tokens[0].token).trim();
+
+    // Pull recent events (start simple: last 100)
+    const eventsResp = await axios.get('https://api.clever.com/v3.0/events?limit=100', {
+      headers: { Authorization: `Bearer ${districtToken}` }
+    });
+
+    const data = eventsResp.data.data || [];
+
+    const insert = db.prepare(`
+      INSERT OR IGNORE INTO events
+      (cleverEventId, created, eventType, recordType, recordId, payload)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `);
+
+    let inserted = 0;
+    data.forEach(ev => {
+      const e = ev.data;
+      const record = e.record || {};
+      const ok = insert.run(
+        e.id,
+        e.created,
+        e.type,
+        record.type || null,
+        record.id || null,
+        JSON.stringify(e)
+      );
+      if (ok.changes > 0) inserted++;
+    });
+
+    console.log("📦 events fetched:", data.length);
+
+    res.redirect(`/admin/events?fetched=${data.length}&inserted=${inserted}`);
+  } catch (err) {
+    console.error("Events fetch error:", err.response?.data || err.message);
+    res.status(500).send(
+      `Events fetch failed: ${err.message}<br><pre>${JSON.stringify(err.response?.data, null, 2)}</pre>`
+    );
+  }
+});
 
 // Start Server
 app.listen(3000, () => console.log('App running on http://localhost:3000'));

@@ -1,0 +1,41 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Event Detail</title>
+  <style>
+    body { font-family: system-ui; background:#f5f7fb; margin:0; padding:24px; }
+    .wrap { max-width: 1100px; margin: 0 auto; }
+    .card { background:white; border-radius:12px; padding:16px; box-shadow:0 10px 25px rgba(15,23,42,.08); margin-top:12px; }
+    code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+    pre { white-space: pre-wrap; word-break: break-word; }
+    a { color:#2F6C95; font-weight:700; text-decoration:none; }
+    .meta { display:grid; grid-template-columns: 160px 1fr; gap:8px 14px; }
+    .label { color:#6b7280; font-weight:700; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a href="/admin/events">← Back to Events</a>
+
+    <div class="card">
+      <h2 style="margin-top:0;">Event Detail</h2>
+      <div class="meta">
+        <div class="label">Event ID</div><div><code><%= event.cleverEventId %></code></div>
+        <div class="label">Created</div><div><%= event.created %></div>
+        <div class="label">Type</div><div><%= event.eventType %></div>
+        <div class="label">Record</div><div><%= event.recordType %> / <code><%= event.recordId %></code></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0;">Payload</h3>
+      <% if (payloadObj) { %>
+        <pre><%= JSON.stringify(payloadObj, null, 2) %></pre>
+      <% } else { %>
+        <pre><%= event.payload %></pre>
+      <% } %>
+    </div>
+  </div>
+</body>
+</html>
