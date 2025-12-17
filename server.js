@@ -325,16 +325,29 @@ const teachersForSectionStmt = db.prepare(`
   }
 
   // --- 5) Render dashboard ---
-  res.render('dashboard', {
-    user: req.user,
-    dbUser,
-    roles,           // all roles this user has (for toggle)
-    activeRole,      // what they’re currently “acting as”
-    role: activeRole, // alias so existing EJS using `role` still works
-    userSchools,
-    classes
-  });
+const prettyRoleMap = {
+  'district_admin': 'District Admin',
+  'school_admin': 'School Admin',
+  'teacher': 'Teacher',
+  'student': 'Student',
+  'contact': 'Contact',
+  'unknown': 'Unknown',
+};
+const PrettyRole = prettyRoleMap[activeRole] || activeRole;
+
+
+res.render('dashboard', {
+  user: req.user,
+  dbUser,
+  roles,
+  activeRole,
+  role: activeRole,
+  PrettyRole,
+  userSchools,
+  classes
 });
+
+}); 
 
 // Admin Dashboard
 app.get('/admin', (req, res) => {
@@ -830,14 +843,11 @@ app.post('/admin/events/fetch', async (req, res) => {
 
   if (!req.isAuthenticated()) return res.redirect('/');
 
-
   const isSuperAdmin  = req.user.email === 'katie.gardner+demo@clever.com';
   const isCleverAdmin = req.user.data && req.user.data.type === 'district_admin';
   if (!isSuperAdmin && !isCleverAdmin) return res.send("Access Denied");
 
   try {
-    // Reuse your existing “get district token” logic.
-    // If you already have a helper, call it here instead.
     const clientId     = process.env.CLEVER_CLIENT_ID.trim();
     const clientSecret = process.env.CLEVER_CLIENT_SECRET.trim();
     const basicAuth    = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
@@ -851,7 +861,6 @@ app.post('/admin/events/fetch', async (req, res) => {
     const tokens = tokensResp.data.data || [];
     const districtToken = String(tokens[0].access_token || tokens[0].token).trim();
 
-    // Pull recent events (start simple: last 100)
     const eventsResp = await axios.get('https://api.clever.com/v3.0/events?limit=100', {
       headers: { Authorization: `Bearer ${districtToken}` }
     });
@@ -881,14 +890,14 @@ app.post('/admin/events/fetch', async (req, res) => {
 
     console.log("📦 events fetched:", data.length);
 
-    res.redirect(`/admin/events?fetched=${data.length}&inserted=${inserted}`);
+    return res.redirect(`/admin/events?fetched=${data.length}&inserted=${inserted}`);
   } catch (err) {
     console.error("Events fetch error:", err.response?.data || err.message);
-    res.status(500).send(
+    return res.status(500).send(
       `Events fetch failed: ${err.message}<br><pre>${JSON.stringify(err.response?.data, null, 2)}</pre>`
     );
   }
-});
+}); // ✅ THIS was missing
 
 // Start Server
 app.listen(3000, () => console.log('App running on http://localhost:3000'));
