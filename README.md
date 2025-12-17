@@ -10,7 +10,8 @@ Features:
 - School admin + district admin views  
 - Multi-role switching  
 - CSV upload + duplicate cleanup  
-- SQLite local storage  
+- SQLite local storage
+- Events sync and filters 
 
 ---
 
