@@ -902,5 +902,15 @@ app.post('/admin/events/fetch', async (req, res) => {
   }
 }); // ✅ THIS was missing
 
+app.get('/debug', (req, res) => {
+  res.json({
+    isAuthenticated: req.isAuthenticated(),
+    email: req.user?.email,
+    dataType: req.user?.data?.type,
+    userType: req.user?.type,
+    fullUser: req.user
+  });
+});
+
 // Start Server
 app.listen(3000, () => console.log('App running on http://localhost:3000'));
