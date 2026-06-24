@@ -35,6 +35,9 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+app.use(express.urlencoded({ extended: true })); // if not already there
+app.use(require('./lms-connect-routes'));
+
 // --- 3. PASSPORT STRATEGY ---
 passport.use(new CleverStrategy({
     clientID: process.env.CLEVER_CLIENT_ID,
