@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Grade Submission</title>
+  <style>
+    body { font-family: sans-serif; max-width: 640px; margin: 40px auto; padding: 0 20px; color: #1a1a1a; }
+    h1 { font-size: 1.5rem; margin-bottom: 4px; }
+    .back { color: #555; font-size: 0.875rem; text-decoration: none; }
+    .back:hover { color: #000; }
+    .card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 24px 0; }
+    .card-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #666; margin-bottom: 12px; }
+    .detail-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; }
+    .detail-label { color: #666; }
+    .detail-value { font-weight: 500; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; }
+    .badge.submitted { background: #dbeafe; color: #1d4ed8; }
+    .badge.returned { background: #dcfce7; color: #15803d; }
+    .badge.draft { background: #f3f4f6; color: #6b7280; }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 6px; }
+    select, input, textarea { width: 100%; padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; box-sizing: border-box; font-family: inherit; }
+    select:focus, input:focus, textarea:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px #dbeafe; }
+    textarea { resize: vertical; min-height: 80px; }
+    .hint { font-size: 0.75rem; color: #888; margin-top: 4px; }
+    .btn { display: inline-block; padding: 9px 20px; border-radius: 6px; font-size: 0.875rem; font-weight: 500; cursor: pointer; border: none; }
+    .btn-primary { background: #2563eb; color: #fff; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .error { background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; padding: 10px 14px; border-radius: 6px; margin-bottom: 20px; font-size: 0.875rem; }
+    .warning { background: #fef9c3; border: 1px solid #fde047; color: #854d0e; padding: 10px 14px; border-radius: 6px; margin-bottom: 16px; font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+  <a class="back" href="/lms/sections/<%= sectionId %>/assignments/<%= assignmentId %>/submissions">← All Submissions</a>
+  <h1 style="margin-top: 12px;">Grade Submission</h1>
+
+  <div class="card">
+    <div class="card-title">Current State</div>
+    <div class="detail-row">
+      <span class="detail-label">Student (Clever ID)</span>
+      <span class="detail-value"><code style="font-size:0.8rem"><%= userId %></code></span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">State</span>
+      <span class="detail-value">
+        <% const state = (submission.state || 'draft').toLowerCase(); %>
+        <span class="badge <%= state %>"><%= state %></span>
+      </span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Score</span>
+      <span class="detail-value"><%= submission.score != null ? submission.score : '—' %></span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label">Submitted At</span>
+      <span class="detail-value"><%= submission.submitted_at ? new Date(submission.submitted_at).toLocaleString() : '—' %></span>
+    </div>
+    <% if (submission.comment) { %>
+      <div class="detail-row">
+        <span class="detail-label">Comment</span>
+        <span class="detail-value"><%= submission.comment %></span>
+      </div>
+    <% } %>
+  </div>
+
+  <% if (error) { %>
+    <div class="error"><strong>API Error:</strong> <%= error %></div>
+  <% } %>
+
+  <div class="warning">
+    Schoology requires submissions to move through states in order: <strong>submitted → returned</strong>.
+    You can only move to <code>returned</code> after the student has submitted. Setting score and comment requires state to be <code>returned</code>.
+  </div>
+
+  <form method="POST" action="/lms/sections/<%= sectionId %>/assignments/<%= assignmentId %>/submissions/<%= userId %>">
+    <div class="form-group">
+      <label for="state">Update State</label>
+      <select id="state" name="state">
+        <option value="">— No change —</option>
+        <option value="submitted" <%= submission.state === 'submitted' ? 'selected' : '' %>>submitted</option>
+        <option value="returned" <%= submission.state === 'returned' ? 'selected' : '' %>>returned</option>
+      </select>
+      <div class="hint">Move to <code>returned</code> to send grade back to student.</div>
+    </div>
+
+    <div class="form-group">
+      <label for="score">Score</label>
+      <input type="number" id="score" name="score" step="0.01" min="0" value="<%= submission.score != null ? submission.score : '' %>" placeholder="e.g. 85">
+    </div>
+
+    <div class="form-group">
+      <label for="comment">Comment</label>
+      <textarea id="comment" name="comment" placeholder="Optional feedback for the student"><%= submission.comment || '' %></textarea>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Update Submission</button>
+  </form>
+</body>
+</html>

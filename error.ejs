@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LMS Error</title>
+  <style>
+    body { font-family: sans-serif; max-width: 640px; margin: 40px auto; padding: 0 20px; color: #1a1a1a; }
+    .error-box { background: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px; padding: 20px 24px; margin-top: 40px; }
+    h1 { font-size: 1.2rem; color: #b91c1c; margin: 0 0 8px; }
+    p { color: #7f1d1d; font-size: 0.9rem; margin: 0 0 16px; }
+    a { color: #2563eb; font-size: 0.875rem; }
+  </style>
+</head>
+<body>
+  <div class="error-box">
+    <h1>LMS Connect Error</h1>
+    <p><%= message || 'Something went wrong with the LMS Connect API call.' %></p>
+    <a href="/dashboard">← Back to Dashboard</a>
+  </div>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Assignments</title>
+  <style>
+    body { font-family: sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; color: #1a1a1a; }
+    h1 { font-size: 1.5rem; margin-bottom: 4px; }
+    .back { color: #555; font-size: 0.875rem; text-decoration: none; }
+    .back:hover { color: #000; }
+    .toolbar { display: flex; justify-content: space-between; align-items: center; margin: 24px 0 16px; }
+    .btn { display: inline-block; padding: 8px 16px; border-radius: 6px; font-size: 0.875rem; font-weight: 500; text-decoration: none; cursor: pointer; border: none; }
+    .btn-primary { background: #2563eb; color: #fff; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-ghost { background: transparent; color: #2563eb; border: 1px solid #2563eb; }
+    .btn-ghost:hover { background: #eff6ff; }
+    .empty { color: #888; font-size: 0.9rem; margin-top: 40px; text-align: center; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th { text-align: left; padding: 10px 12px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #666; border-bottom: 2px solid #e5e7eb; }
+    td { padding: 12px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+    tr:hover td { background: #f9fafb; }
+    .assignment-title a { font-weight: 500; color: #1a1a1a; text-decoration: none; }
+    .assignment-title a:hover { color: #2563eb; }
+    .due { color: #666; font-size: 0.8rem; }
+    .points { font-size: 0.85rem; color: #555; }
+    .actions { display: flex; gap: 8px; }
+    .action-link { font-size: 0.8rem; color: #2563eb; text-decoration: none; }
+    .action-link:hover { text-decoration: underline; }
+    .action-link.danger { color: #dc2626; }
+  </style>
+</head>
+<body>
+  <a class="back" href="/dashboard">← Dashboard</a>
+  <div class="toolbar">
+    <div>
+      <h1 style="margin:0">Assignments</h1>
+      <p style="margin:4px 0 0; color:#666; font-size:0.85rem;">Section: <code><%= sectionId %></code></p>
+    </div>
+    <% if (role === 'teacher' || role === 'school_admin' || role === 'district_admin') { %>
+      <a class="btn btn-primary" href="/lms/sections/<%= sectionId %>/assignments/new">+ New Assignment</a>
+    <% } %>
+  </div>
+
+  <% if (!assignments.length) { %>
+    <div class="empty">
+      <p>No assignments yet for this section.</p>
+      <% if (role === 'teacher') { %>
+        <a class="btn btn-ghost" href="/lms/sections/<%= sectionId %>/assignments/new">Create the first one</a>
+      <% } %>
+    </div>
+  <% } else { %>
+    <table>
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Due</th>
+          <th>Max Points</th>
+          <% if (role !== 'student') { %><th>Actions</th><% } %>
+        </tr>
+      </thead>
+      <tbody>
+        <% assignments.forEach(a => { %>
+          <tr>
+            <td class="assignment-title">
+              <a href="/lms/sections/<%= sectionId %>/assignments/<%= a.id %>"><%= a.title || 'Untitled' %></a>
+              <% if (a.description) { %>
+                <div style="color:#666; font-size:0.8rem; margin-top:2px;"><%= a.description %></div>
+              <% } %>
+            </td>
+            <td class="due"><%= a.due ? new Date(a.due).toLocaleDateString() : '—' %></td>
+            <td class="points"><%= a.max_points != null ? a.max_points : '—' %></td>
+            <% if (role !== 'student') { %>
+              <td>
+                <div class="actions">
+                  <a class="action-link" href="/lms/sections/<%= sectionId %>/assignments/<%= a.id %>/submissions">Submissions</a>
+                  <a class="action-link" href="/lms/sections/<%= sectionId %>/assignments/<%= a.id %>/edit">Edit</a>
+                  <form method="POST" action="/lms/sections/<%= sectionId %>/assignments/<%= a.id %>/delete" style="display:inline;" onsubmit="return confirm('Delete this assignment?')">
+                    <button type="submit" class="action-link danger" style="background:none; border:none; padding:0; cursor:pointer; font-size:0.8rem;">Delete</button>
+                  </form>
+                </div>
+              </td>
+            <% } %>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+</body>
+</html>

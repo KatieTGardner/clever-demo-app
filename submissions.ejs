@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Submissions</title>
+  <style>
+    body { font-family: sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; color: #1a1a1a; }
+    h1 { font-size: 1.5rem; margin-bottom: 4px; }
+    .back { color: #555; font-size: 0.875rem; text-decoration: none; }
+    .back:hover { color: #000; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 24px; }
+    th { text-align: left; padding: 10px 12px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #666; border-bottom: 2px solid #e5e7eb; }
+    td { padding: 12px; border-bottom: 1px solid #f0f0f0; }
+    tr:hover td { background: #f9fafb; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; }
+    .badge.submitted { background: #dbeafe; color: #1d4ed8; }
+    .badge.returned { background: #dcfce7; color: #15803d; }
+    .badge.draft { background: #f3f4f6; color: #6b7280; }
+    .action-link { font-size: 0.8rem; color: #2563eb; text-decoration: none; }
+    .action-link:hover { text-decoration: underline; }
+    .empty { color: #888; font-size: 0.9rem; margin-top: 40px; text-align: center; }
+  </style>
+</head>
+<body>
+  <a class="back" href="/lms/sections/<%= sectionId %>/assignments/<%= assignmentId %>">← Assignment</a>
+  <h1 style="margin-top: 12px;">All Submissions</h1>
+  <p style="color:#666; font-size:0.85rem; margin-top: 4px;">Assignment: <code><%= assignmentId %></code></p>
+
+  <% if (!submissions.length) { %>
+    <div class="empty">
+      <p>No submissions yet. Students must submit in Schoology first.</p>
+    </div>
+  <% } else { %>
+    <table>
+      <thead>
+        <tr>
+          <th>Student (Clever ID)</th>
+          <th>State</th>
+          <th>Score</th>
+          <th>Submitted At</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% submissions.forEach(sub => { %>
+          <tr>
+            <td><code style="font-size:0.8rem"><%= sub.user_id || sub.userId || '—' %></code></td>
+            <td>
+              <% const state = (sub.state || 'draft').toLowerCase(); %>
+              <span class="badge <%= state %>"><%= state %></span>
+            </td>
+            <td><%= sub.score != null ? sub.score : '—' %></td>
+            <td style="font-size:0.8rem; color:#666;"><%= sub.submitted_at ? new Date(sub.submitted_at).toLocaleDateString() : '—' %></td>
+            <td>
+              <a class="action-link" href="/lms/sections/<%= sectionId %>/assignments/<%= assignmentId %>/submissions/<%= sub.user_id || sub.userId %>">Grade →</a>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+</body>
+</html>

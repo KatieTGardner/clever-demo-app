@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title><%= assignment ? 'Edit Assignment' : 'New Assignment' %></title>
+  <style>
+    body { font-family: sans-serif; max-width: 640px; margin: 40px auto; padding: 0 20px; color: #1a1a1a; }
+    h1 { font-size: 1.5rem; margin-bottom: 4px; }
+    .back { color: #555; font-size: 0.875rem; text-decoration: none; }
+    .back:hover { color: #000; }
+    .form-group { margin-bottom: 20px; }
+    label { display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 6px; }
+    input, textarea { width: 100%; padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; box-sizing: border-box; font-family: inherit; }
+    input:focus, textarea:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px #dbeafe; }
+    textarea { resize: vertical; min-height: 80px; }
+    .hint { font-size: 0.75rem; color: #888; margin-top: 4px; }
+    .btn { display: inline-block; padding: 9px 20px; border-radius: 6px; font-size: 0.875rem; font-weight: 500; cursor: pointer; border: none; }
+    .btn-primary { background: #2563eb; color: #fff; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-ghost { background: transparent; color: #555; text-decoration: none; margin-left: 12px; font-size: 0.875rem; }
+    .error { background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; padding: 10px 14px; border-radius: 6px; margin-bottom: 20px; font-size: 0.875rem; }
+    .row { display: flex; gap: 16px; }
+    .row .form-group { flex: 1; }
+  </style>
+</head>
+<body>
+  <a class="back" href="/lms/sections/<%= sectionId %>/assignments">← Assignments</a>
+  <h1 style="margin-top: 12px;"><%= assignment ? 'Edit Assignment' : 'New Assignment' %></h1>
+
+  <% if (error) { %>
+    <div class="error"><strong>Error:</strong> <%= error %></div>
+  <% } %>
+
+  <form method="POST" action="/lms/sections/<%= sectionId %>/assignments<%= assignment?.id ? '/' + assignment.id + '/edit' : '' %>" style="margin-top: 24px;">
+    <div class="form-group">
+      <label for="title">Title <span style="color:#dc2626">*</span></label>
+      <input type="text" id="title" name="title" required value="<%= assignment?.title || '' %>" placeholder="e.g. Chapter 3 Reading Quiz">
+    </div>
+
+    <div class="form-group">
+      <label for="description">Description</label>
+      <textarea id="description" name="description" placeholder="Optional instructions for students"><%= assignment?.description || '' %></textarea>
+    </div>
+
+    <div class="row">
+      <div class="form-group">
+        <label for="due">Due Date</label>
+        <input type="datetime-local" id="due" name="due" value="<%= assignment?.due ? new Date(assignment.due).toISOString().slice(0,16) : '' %>">
+        <div class="hint">Schoology uses UTC. Sent as ISO 8601.</div>
+      </div>
+
+      <div class="form-group">
+        <label for="max_points">Max Points</label>
+        <input type="number" id="max_points" name="max_points" min="0" step="1" value="<%= assignment?.max_points ?? '' %>" placeholder="e.g. 100">
+        <div class="hint">Must be a whole number for Schoology.</div>
+      </div>
+    </div>
+
+    <div style="margin-top: 8px;">
+      <button type="submit" class="btn btn-primary"><%= assignment ? 'Save Changes' : 'Create Assignment' %></button>
+      <a class="btn-ghost" href="/lms/sections/<%= sectionId %>/assignments">Cancel</a>
+    </div>
+  </form>
+</body>
+</html>
