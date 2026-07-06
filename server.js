@@ -36,6 +36,10 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use(express.urlencoded({ extended: true }));
+app.use((req, res, next) => {
+  console.log('📥', req.method, req.originalUrl, JSON.stringify(req.query), JSON.stringify(req.body));
+  next();
+});
 app.use(require('./lms-connect-routes'));
 
 // --- 3. PASSPORT STRATEGY ---
