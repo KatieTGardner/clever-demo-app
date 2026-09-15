@@ -319,7 +319,23 @@ app.get('/admin', (req, res) => {
 
   const allSchools = db.prepare('SELECT cleverId, name FROM schools ORDER BY name').all();
 
-  res.render('admin', { user: req.user, allUsers, allSchools });
+      const allSections = db.prepare(`
+    SELECT
+      s.cleverId,
+      s.name,
+      s.schoolId,
+      sch.name AS schoolName,
+      (SELECT COUNT(*) FROM enrollments e
+        WHERE e.sectionId = s.cleverId AND e.role = 'student') AS studentCount,
+      (SELECT GROUP_CONCAT(u.name, ', ') FROM enrollments e
+        JOIN users u ON u.cleverId = e.userId
+        WHERE e.sectionId = s.cleverId AND e.role = 'teacher') AS teachersCsv
+    FROM sections s
+    LEFT JOIN schools sch ON sch.cleverId = s.schoolId
+    ORDER BY s.name
+  `).all();
+
+  res.render('admin', { user: req.user, allUsers, allSchools, allSections });
 });
 
 // --- 5. UPLOAD ROUTE (Manual CSV) ---
