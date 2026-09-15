@@ -122,7 +122,7 @@ app.get('/mock-login', (req, res, next) => {
     id: 'mock-admin',
     email: 'katie.gardner+demo@clever.com',
     type: 'district_admin',
-    districtId: 'YOUR_SANDBOX_DISTRICT_ID',
+    districtId: '69d0014575b59e766be19bf2',
     data: { id: 'mock-admin', type: 'district_admin' },
     name: { first: 'Mock', last: 'Admin' }
   };
