@@ -377,6 +377,105 @@
           <% } %>
         </select>
       </div>
+  <!-- Sections Data Browser -->
+  <div class="user-table-card" style="margin-top: 24px;">
+    <div class="user-table-header">
+      <h3>Section Data Browser</h3>
+      <div class="filters">
+        <input
+          type="text"
+          id="sectionSearch"
+          placeholder="Search section, teacher, school, or Clever ID…"
+          autocomplete="off"
+          style="min-width: 280px;"
+        />
+        <select id="sectionSchoolFilter">
+          <option value="">All schools</option>
+          <% if (Array.isArray(allSchools)) { %>
+            <% allSchools.forEach(function(s) { %>
+              <option value="<%= (s.name || '').toLowerCase() %>"><%= s.name %></option>
+            <% }); %>
+          <% } %>
+        </select>
+      </div>
+    </div>
+
+    <% if (Array.isArray(allSections) && allSections.length > 0) { %>
+      <div class="user-table-wrapper">
+        <table class="user-table" id="sectionTable">
+          <thead>
+            <tr>
+              <th>Section</th>
+              <th>School</th>
+              <th>Teacher(s)</th>
+              <th>Students</th>
+              <th>Clever Section ID</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% allSections.forEach(function(sec) {
+                 const secName   = sec.name || 'Untitled Section';
+                 const schoolNm  = sec.schoolName || '';
+                 const teachers  = sec.teachersCsv || '';
+            %>
+              <tr
+                data-name="<%= String(secName).toLowerCase() %>"
+                data-school="<%= String(schoolNm).toLowerCase() %>"
+                data-teachers="<%= String(teachers).toLowerCase() %>"
+                data-id="<%= String(sec.cleverId || '').toLowerCase() %>"
+              >
+                <td><%= secName %></td>
+                <td><%= schoolNm || '-' %></td>
+                <td><%= teachers || '-' %></td>
+                <td><%= sec.studentCount || 0 %></td>
+                <td><code><%= sec.cleverId %></code></td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <div class="empty-state">
+        No sections found. Try running a Clever sync.
+      </div>
+    <% } %>
+  </div>
+
+<script>
+  (function() {
+    const searchInput  = document.getElementById('sectionSearch');
+    const schoolSelect = document.getElementById('sectionSchoolFilter');
+    const table        = document.getElementById('sectionTable');
+    if (!table) return;
+
+    const rows = Array.from(table.querySelectorAll('tbody tr'));
+
+    function applyFilters() {
+      const searchVal = (searchInput.value || '').toLowerCase().trim();
+      const schoolVal = (schoolSelect.value || '').toLowerCase().trim();
+
+      rows.forEach(row => {
+        const name     = row.getAttribute('data-name')     || '';
+        const school   = row.getAttribute('data-school')   || '';
+        const teachers = row.getAttribute('data-teachers') || '';
+        const id       = row.getAttribute('data-id')       || '';
+
+        const matchesSchool = !schoolVal || school.includes(schoolVal);
+        const matchesSearch =
+          !searchVal ||
+          name.includes(searchVal) ||
+          school.includes(searchVal) ||
+          teachers.includes(searchVal) ||
+          id.includes(searchVal);
+
+        row.classList.toggle('hidden', !(matchesSchool && matchesSearch));
+      });
+    }
+
+    searchInput.addEventListener('input', applyFilters);
+    schoolSelect.addEventListener('change', applyFilters);
+  })();
+</script>
     </div>
 
     <% if (Array.isArray(allUsers) && allUsers.length > 0) { %>
