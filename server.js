@@ -116,6 +116,22 @@ app.get('/auth/clever/callback',
     }
 );
 
+// TEMP: local-only admin bypass
+app.get('/mock-login', (req, res, next) => {
+  const mockUser = {
+    id: 'mock-admin',
+    email: 'katie.gardner+demo@clever.com',
+    type: 'district_admin',
+    districtId: 'YOUR_SANDBOX_DISTRICT_ID',
+    data: { id: 'mock-admin', type: 'district_admin' },
+    name: { first: 'Mock', last: 'Admin' }
+  };
+  req.login(mockUser, (err) => {
+    if (err) return next(err);
+    res.redirect('/admin');
+  });
+});
+
 // Student / Teacher / Admin Dashboard with multi-role + role toggle
 app.get('/dashboard', (req, res) => {
   if (!req.isAuthenticated()) return res.redirect('/');
